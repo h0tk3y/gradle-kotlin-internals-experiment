@@ -1,0 +1,42 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.2.31'
+    id 'maven'
+}
+
+group = 'com.example'
+version = '1.0'
+
+repositories { 
+    jcenter()
+}
+
+dependencies {
+    compile 'org.jetbrains.kotlin:kotlin-stdlib'
+}
+
+sourceSets {
+    foo {
+        compileClasspath = configurations.compileClasspath
+    }
+    main {
+        compileClasspath += foo.output
+    }
+}
+
+compileKotlin {
+    setFriendTaskName$kotlin_gradle_plugin(compileFooKotlin.name)
+
+    doLast {
+        def kotlinModuleFilePath = "$destinationDir/META-INF/${archivesBaseName}_${sourceSets.foo.name}.kotlin_module"
+        copy {
+            from kotlinModuleFilePath
+            into "$destinationDir/META-INF"
+            rename '(.*).kotlin_module', '$1_main.kotlin_module'
+        }
+        file(kotlinModuleFilePath).delete()
+    }
+}
+
+jar {
+    from sourceSets.foo.output
+}
